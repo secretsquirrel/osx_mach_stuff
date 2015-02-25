@@ -11,6 +11,8 @@ Updating the code to 10.10 for a mental exercise and to learn mach programming.
 Chapter 7 is where it really starts from a programming POV.
 
 To see the example working:
+
+
 		On 10.10:
 		gcc -o chapter_7 chapter_7.c
 
