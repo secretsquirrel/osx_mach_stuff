@@ -49,17 +49,17 @@ $ kern.securelevel: 0
 
 void error(char *msg)
 {
-	printf("[!] error: %s\n", msg);
-	exit(1);
+    printf("[!] error: %s\n", msg);
+    exit(1);
 }
 
 void usage(char *progname)
 {
-	printf("[+] usage: %s <0xsysctlValueaddr> <value>\n", progname);
-	printf("\tIn Yosemite:\n");
-	printf("\t$ sudo nm /System/Library/Kernels/kernel | grep securelevel\n");
-	printf("\t$ %s 0xffffffff..... 1\n", progname);
-	exit(1);
+    printf("[+] usage: %s <0xsysctlValueaddr> <value>\n", progname);
+    printf("\tIn Yosemite:\n");
+    printf("\t$ sudo nm /System/Library/Kernels/kernel | grep securelevel\n");
+    printf("\t$ %s 0xffffffff..... 1\n", progname);
+    exit(1);
 }
 
 // From: https://github.com/gdbinit/checkidt/blob/master/kernel.c#L62
@@ -125,27 +125,27 @@ void get_kaslr_slide(size_t *size, uint64_t *slide)
 
 int main(int ac, char **av)
 {
-	mach_port_t kernel_task;
-	kern_return_t err;
-	long value = 0;
+    mach_port_t kernel_task;
+    kern_return_t err;
+    long value = 0;
     long long syscalladdr = 0;
-	unsigned long *data2;
-	unsigned int data_cnt;
-	char **endptr;
-	uint64_t kaslr_slide;
-	size_t kaslr_size;
-	int kernel_type;
+    unsigned long *data2;
+    unsigned int data_cnt;
+    char **endptr;
+    uint64_t kaslr_slide;
+    size_t kaslr_size;
+    int kernel_type;
 
 
-	if ( ac!= 3)
-		usage(*av);
+    if ( ac!= 3)
+        usage(*av);
 
-	if(getuid() && geteuid())
-		error("requires root.");
+    if(getuid() && geteuid())
+        error("requires root.");
 
-	//From https://github.com/gdbinit/checkidt/blob/master/main.c#L166
-	// {
-	kernel_type = get_kernel_type();
+    //From https://github.com/gdbinit/checkidt/blob/master/main.c#L166
+    // {
+    kernel_type = get_kernel_type();
     if (kernel_type == -1)
     {
         error("Unable to retrieve kernel type.");
@@ -160,23 +160,23 @@ int main(int ac, char **av)
     // }
 
     syscalladdr = strtoul(av[1], endptr, 0);
-	value = atoi(av[2]);
-	printf("Submitted Address: 0x%llx\n", syscalladdr);
-	
-	vm_size_t datasize;
-	kaslr_size = sizeof(kaslr_size);
-	get_kaslr_slide(&kaslr_size, &kaslr_slide);
-	printf("Kaslr slide is 0x%llx\n", kaslr_slide);
+    value = atoi(av[2]);
+    printf("Submitted Address: 0x%llx\n", syscalladdr);
+    
+    vm_size_t datasize;
+    kaslr_size = sizeof(kaslr_size);
+    get_kaslr_slide(&kaslr_size, &kaslr_slide);
+    printf("Kaslr slide is 0x%llx\n", kaslr_slide);
     syscalladdr += kaslr_slide;
     printf("Address to be modified: 0x%llx\n", syscalladdr);
-	
-	// change to processor_set_tasks
-	// OLD:
-	// err = task_for_pid(mach_task_self(), 0, &kernel_task);
-	// New from OSXReverser/fG!
+    
+    // change to processor_set_tasks
+    // OLD:
+    // err = task_for_pid(mach_task_self(), 0, &kernel_task);
+    // New from OSXReverser/fG!
     // https://github.com/gdbinit/checkidt/blob/master/main.c#L189
     
-	host_t host_port = mach_host_self();
+    host_t host_port = mach_host_self();
     mach_port_t proc_set_default = 0;
     mach_port_t proc_set_default_control = 0;
     task_array_t all_tasks = NULL;
@@ -198,19 +198,19 @@ int main(int ac, char **av)
                 valid_kernel_port = 1;
             }
         }
-    }	
+    }   
 
-	if ((kr != KERN_SUCCESS) || !MACH_PORT_VALID(kernel_task))
-		error("getting kernel task.");
+    if ((kr != KERN_SUCCESS) || !MACH_PORT_VALID(kernel_task))
+        error("getting kernel task.");
 
-	printf("Kernel_task: %d\n", kernel_task);
+    printf("Kernel_task: %d\n", kernel_task);
 
-	//Write values to stack
-	if(vm_write(kernel_task, (vm_address_t) syscalladdr, (vm_address_t)&value, sizeof(value)))
-		error("writing argument to submitted address.");
+    //Write values to stack
+    if(vm_write(kernel_task, (vm_address_t) syscalladdr, (vm_address_t)&value, sizeof(value)))
+        error("writing argument to submitted address.");
 
-	printf("[+] done!\n");
+    printf("[+] done!\n");
 
-	return 0;
+    return 0;
 
 }
